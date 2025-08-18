@@ -7,6 +7,7 @@
 ## Interfaces & Dependencies
 - **APIs / schemas / migrations:** …
 - **Env/Secrets/Flags:** …
+- Packages to install: [automatically filled in based on the task and its requirements, if applicable]
 
 ## Success Criteria (Definition of Done)
 - [ ] User can …
@@ -26,3 +27,11 @@
 
 ## Other Considerations
 [Any other considerations or specific requirements - great place to include gotchas that you see AI coding assistants miss with your projects a lot]
+
+## Always Remember
+- **Document changes** - After successful verification:
+    - Write a brief, conceptual summary of changes made
+    - Focus on the "what" and "why" rather than technical implementation details
+    - Save this summary as `implementation_summary.md` in the same directory as the task file
+    - This serves as a memory blueprint for future development cycles
+- Store task-related documentation (`execution_plan.md`, `implementation_summary.md`) alongside task files
