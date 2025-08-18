@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Palette, Timer, Paintbrush, ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2, AlertCircle } from 'lucide-react';
+import { Palette, Timer, Paintbrush, ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2, AlertCircle, Download } from 'lucide-react';
 import 'react-circular-progressbar/dist/styles.css';
 
 interface Square {
@@ -72,22 +72,44 @@ export default function PlayPage() {
   const [squares, setSquares] = useState<Square[]>([]);
   const [selectedColor, setSelectedColor] = useState(COLORS[0].value);
   const [currentPosition, setCurrentPosition] = useState({ x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) }); // Start in center
-  const [paintCount, setPaintCount] = useState(40);
+  const [paintCount, setPaintCount] = useState(20);
   const [timeUntilNextPaint, setTimeUntilNextPaint] = useState(0);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  
+
   // Toolbar dragging state
   const [toolbarPosition, setToolbarPosition] = useState({ x: 0, y: 0 });
   const [isToolbarDragging, setIsToolbarDragging] = useState(false);
   const [toolbarDragStart, setToolbarDragStart] = useState({ x: 0, y: 0 });
-  
+
   // Compact mode state
   const [isCompactMode, setIsCompactMode] = useState(false);
-  
+
   // Feedback state
   const [showOutOfPaintAlert, setShowOutOfPaintAlert] = useState(false);
+
+  // Download canvas as PNG
+  const downloadCanvas = useCallback(async () => {
+    try {
+      const response = await fetch('/api/download');
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'canvas-artwork.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } else {
+        console.error('Failed to download canvas');
+      }
+    } catch (error) {
+      console.error('Error downloading canvas:', error);
+    }
+  }, []);
 
   // Fetch canvas data
   const fetchCanvas = useCallback(async () => {
@@ -127,7 +149,7 @@ export default function PlayPage() {
 
       if (response.ok) {
         // Update local state immediately for instant feedback
-        setSquares(prev => prev.map(square => 
+        setSquares(prev => prev.map(square =>
           square.x_coordinate === x && square.y_coordinate === y
             ? { ...square, color }
             : square
@@ -174,13 +196,13 @@ export default function PlayPage() {
     if (isDragging) {
       const deltaX = event.clientX - dragStart.x;
       const deltaY = event.clientY - dragStart.y;
-      
+
       const container = document.querySelector('.canvas-container') as HTMLElement;
       if (container) {
         container.scrollLeft -= deltaX;
         container.scrollTop -= deltaY;
       }
-      
+
       setDragStart({ x: event.clientX, y: event.clientY });
     }
   }, [isDragging, dragStart]);
@@ -195,9 +217,9 @@ export default function PlayPage() {
     event.preventDefault();
     event.stopPropagation();
     setIsToolbarDragging(true);
-    setToolbarDragStart({ 
-      x: event.clientX - toolbarPosition.x, 
-      y: event.clientY - toolbarPosition.y 
+    setToolbarDragStart({
+      x: event.clientX - toolbarPosition.x,
+      y: event.clientY - toolbarPosition.y
     });
   }, [toolbarPosition]);
 
@@ -205,14 +227,14 @@ export default function PlayPage() {
     if (isToolbarDragging) {
       const newX = event.clientX - toolbarDragStart.x;
       const newY = event.clientY - toolbarDragStart.y;
-      
+
       // Constrain to viewport bounds with some padding
       const padding = 20;
       const maxX = window.innerWidth - padding;
       const maxY = window.innerHeight - padding;
       const minX = -window.innerWidth / 2 + padding;
       const minY = -window.innerHeight / 2 + padding;
-      
+
       setToolbarPosition({
         x: Math.max(minX, Math.min(maxX, newX)),
         y: Math.max(minY, Math.min(maxY, newY))
@@ -227,7 +249,7 @@ export default function PlayPage() {
       const squareSize = getSquareSize();
       const targetX = x * squareSize - container.clientWidth / 2;
       const targetY = y * squareSize - container.clientHeight / 2;
-      
+
       container.scrollTo({
         left: Math.max(0, targetX),
         top: Math.max(0, targetY),
@@ -239,7 +261,7 @@ export default function PlayPage() {
   // Handle keyboard navigation
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     const { key } = event;
-    
+
     // Handle zoom with + and - keys
     if (event.ctrlKey || event.metaKey) {
       if (key === '=' || key === '+') {
@@ -258,7 +280,7 @@ export default function PlayPage() {
         return;
       }
     }
-    
+
     // Prevent default for space key to avoid double triggers
     if (key === ' ') {
       event.preventDefault();
@@ -266,7 +288,7 @@ export default function PlayPage() {
       paintSquare(currentPosition.x, currentPosition.y, selectedColor);
       return;
     }
-    
+
     setCurrentPosition(prev => {
       let newX = prev.x;
       let newY = prev.y;
@@ -294,7 +316,7 @@ export default function PlayPage() {
 
       // Auto-scroll to new position
       setTimeout(() => scrollToPosition(newX, newY), 0);
-      
+
       return { x: newX, y: newY };
     });
   }, [currentPosition.x, currentPosition.y, selectedColor, paintSquare, scrollToPosition]);
@@ -328,9 +350,9 @@ export default function PlayPage() {
       const timer = setTimeout(() => {
         setTimeUntilNextPaint(prev => {
           const newTime = prev - 1;
-          if (newTime === 0 && paintCount < 40) {
-            setPaintCount(count => Math.min(40, count + 1));
-            return paintCount < 39 ? 5 : 0; // Continue timer if not at max
+          if (newTime === 0 && paintCount < 20) {
+            setPaintCount(count => Math.min(20, count + 1));
+            return paintCount < 19 ? 5 : 0; // Continue timer if not at max
           }
           return newTime;
         });
@@ -351,18 +373,18 @@ export default function PlayPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
       {/* Full-screen scrollable Canvas Grid */}
-      <div 
+      <div
         className="canvas-container h-screen overflow-auto p-4 select-none"
-        style={{ 
+        style={{
           scrollBehavior: 'smooth',
           cursor: isDragging ? 'grabbing' : 'grab',
           paddingBottom: '160px'
         }}
         onMouseDown={handleMouseDown}
       >
-        <div 
+        <div
           className="grid bg-white rounded-lg shadow-lg border border-gray-200 mx-auto my-4"
-          style={{ 
+          style={{
             gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
             gap: `${Math.max(1, Math.round(2 * zoomLevel))}px`,
             width: `${GRID_SIZE * getSquareSize() + (GRID_SIZE - 1) * Math.max(1, Math.round(2 * zoomLevel))}px`,
@@ -379,7 +401,7 @@ export default function PlayPage() {
                     ? 'ring-2 ring-purple-400 z-10 shadow-md' 
                     : 'hover:ring-1 hover:ring-blue-300'
                 }`}
-                style={{ 
+                style={{
                   backgroundColor: getSquareColor(x, y),
                   width: `${getSquareSize()}px`,
                   height: `${getSquareSize()}px`,
@@ -393,7 +415,7 @@ export default function PlayPage() {
               >
                 {isCurrentSquare(x, y) && (
                   <div className="absolute inset-0 bg-purple-400/20 flex items-center justify-center">
-                    <div 
+                    <div
                       className="rounded-full bg-purple-600 animate-pulse"
                       style={{
                         width: `${Math.max(2, Math.round(4 * zoomLevel))}px`,
@@ -409,7 +431,7 @@ export default function PlayPage() {
       </div>
 
       {/* Unified Draggable Toolbar */}
-      <div 
+      <div
         className="fixed bottom-6 left-1/2 z-50 select-none"
         style={{
           transform: `translate(calc(-50% + ${toolbarPosition.x}px), ${toolbarPosition.y}px)`
@@ -418,14 +440,14 @@ export default function PlayPage() {
         <div className={`relative bg-black/40 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 transition-all duration-300 ${isCompactMode ? 'p-3 w-[320px]' : 'p-5 w-[750px]'}`}>
           {/* Dark glassmorphism overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-black/30 to-black/40 rounded-3xl" />
-          
+
           {/* Drag handle area - covers entire toolbar except buttons */}
-          <div 
+          <div
             className="absolute inset-0 rounded-3xl"
             onMouseDown={handleToolbarMouseDown}
             style={{ cursor: isToolbarDragging ? 'grabbing' : 'grab' }}
           />
-          
+
           {/* Compact toggle button - top right, larger */}
           <button
             onClick={(e) => {
@@ -453,7 +475,7 @@ export default function PlayPage() {
                     {Math.round(zoomLevel * 100)}%
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setZoomLevel(prev => Math.max(0.5, prev - 0.2))}
@@ -476,6 +498,16 @@ export default function PlayPage() {
                   >
                     <ZoomIn className="w-4 h-4 text-white" />
                   </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      downloadCanvas();
+                    }}
+                    className="p-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-all duration-200 border border-white/30"
+                    title="Download Canvas"
+                  >
+                    <Download className="w-4 h-4 text-white" />
+                  </button>
                 </div>
               </div>
             )}
@@ -487,7 +519,7 @@ export default function PlayPage() {
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-2">
                     <Palette className="w-3 h-3 text-white/90" />
-                    <div 
+                    <div
                       className="w-3 h-3 rounded-full border border-white/50 shadow-sm"
                       style={{ backgroundColor: selectedColor }}
                     />
@@ -495,7 +527,7 @@ export default function PlayPage() {
                   <div className="flex items-center gap-2">
                     <Paintbrush className="w-3 h-3 text-white/70" />
                     <span className="text-xs text-white/80 bg-white/20 px-1.5 py-0.5 rounded">
-                      {paintCount}/40
+                      {paintCount}/20
                     </span>
                     {timeUntilNextPaint > 0 && (
                       <span className="text-xs text-orange-300">{timeUntilNextPaint}s</span>
@@ -508,17 +540,18 @@ export default function PlayPage() {
                   <Palette className="w-4 h-4 text-white/90" />
                   <span className="text-sm font-medium text-white/90">Colors</span>
                   {selectedColor && (
-                    <div 
+                    <div
                       className="w-4 h-4 rounded-full border-2 border-white/50 shadow-lg"
                       style={{ backgroundColor: selectedColor }}
                     />
                   )}
                 </div>
               )}
-              
+
               {/* Color grid - much more compact in compact mode */}
               <div className={`grid ${isCompactMode ? 'grid-cols-7 gap-1' : 'grid-cols-12 gap-1.5'}`}>
-                {COLORS.map((color) => (
+                  {/* eslint-disable-next-line @typescript-eslint/no-unused-vars */}
+                {COLORS.map((color, index) => (
                   <button
                     key={color.value}
                     onClick={() => setSelectedColor(color.value)}
@@ -545,17 +578,17 @@ export default function PlayPage() {
                   <Paintbrush className="w-4 h-4 text-white/90" />
                   <span className="text-sm font-medium text-white/90">Paint</span>
                   <span className="text-sm font-bold text-white bg-white/20 px-2 py-1 rounded-lg ml-2">
-                    {paintCount}/40
+                    {paintCount}/20
                   </span>
                 </div>
-                
+
                 {/* Horizontal paint bar */}
                 <div className="w-full">
                   <div className="flex items-center gap-2">
                     <div className="flex-1 bg-white/20 rounded-full h-3 overflow-hidden">
-                      <div 
+                      <div
                         className="h-full bg-gradient-to-r from-blue-400 to-cyan-300 transition-all duration-500 ease-out rounded-full"
-                        style={{ width: `${(paintCount / 40) * 100}%` }}
+                        style={{ width: `${(paintCount / 20) * 100}%` }}
                       />
                     </div>
                     
