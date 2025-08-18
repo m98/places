@@ -1,7 +1,7 @@
 # Create Task
 
 1. Create the directory `.claude/tasks/$ARGUMENTS/` (if it doesn’t exist).
-2. Duplicate `.claude/templates/task_template.md` to `.claude/tasks/$ARGUMENTS/task.md`.
+2. Duplicate `.claude/templates/task_template.md` to `.claude/tasks/[index.]$ARGUMENTS/task.md`. The [index] should be the incremental prefix for the task folder, and it should be automatically set based on existing folders in the same directory.
 3. Parse all `##` headings in `task_template.md` and prompt the user ONE SECTION AT A TIME.
 4. Insert each answer into the corresponding section of `task.md`, saving after each update.
 5. Iterate refinements based on user feedback until approved, then keep the final file at `.claude/tasks/$ARGUMENTS/task.md`.
