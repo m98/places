@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Palette, Timer, Paintbrush, ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2, AlertCircle } from 'lucide-react';
-import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 
 interface Square {
@@ -73,7 +72,7 @@ export default function PlayPage() {
   const [squares, setSquares] = useState<Square[]>([]);
   const [selectedColor, setSelectedColor] = useState(COLORS[0].value);
   const [currentPosition, setCurrentPosition] = useState({ x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) }); // Start in center
-  const [paintCount, setPaintCount] = useState(20);
+  const [paintCount, setPaintCount] = useState(40);
   const [timeUntilNextPaint, setTimeUntilNextPaint] = useState(0);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
@@ -329,9 +328,9 @@ export default function PlayPage() {
       const timer = setTimeout(() => {
         setTimeUntilNextPaint(prev => {
           const newTime = prev - 1;
-          if (newTime === 0 && paintCount < 20) {
-            setPaintCount(count => Math.min(20, count + 1));
-            return paintCount < 19 ? 5 : 0; // Continue timer if not at max
+          if (newTime === 0 && paintCount < 40) {
+            setPaintCount(count => Math.min(40, count + 1));
+            return paintCount < 39 ? 5 : 0; // Continue timer if not at max
           }
           return newTime;
         });
@@ -356,7 +355,8 @@ export default function PlayPage() {
         className="canvas-container h-screen overflow-auto p-4 select-none"
         style={{ 
           scrollBehavior: 'smooth',
-          cursor: isDragging ? 'grabbing' : 'grab'
+          cursor: isDragging ? 'grabbing' : 'grab',
+          paddingBottom: '160px'
         }}
         onMouseDown={handleMouseDown}
       >
@@ -495,7 +495,7 @@ export default function PlayPage() {
                   <div className="flex items-center gap-2">
                     <Paintbrush className="w-3 h-3 text-white/70" />
                     <span className="text-xs text-white/80 bg-white/20 px-1.5 py-0.5 rounded">
-                      {paintCount}/20
+                      {paintCount}/40
                     </span>
                     {timeUntilNextPaint > 0 && (
                       <span className="text-xs text-orange-300">{timeUntilNextPaint}s</span>
@@ -518,7 +518,7 @@ export default function PlayPage() {
               
               {/* Color grid - much more compact in compact mode */}
               <div className={`grid ${isCompactMode ? 'grid-cols-7 gap-1' : 'grid-cols-12 gap-1.5'}`}>
-                {COLORS.map((color, index) => (
+                {COLORS.map((color) => (
                   <button
                     key={color.value}
                     onClick={() => setSelectedColor(color.value)}
@@ -545,7 +545,7 @@ export default function PlayPage() {
                   <Paintbrush className="w-4 h-4 text-white/90" />
                   <span className="text-sm font-medium text-white/90">Paint</span>
                   <span className="text-sm font-bold text-white bg-white/20 px-2 py-1 rounded-lg ml-2">
-                    {paintCount}/20
+                    {paintCount}/40
                   </span>
                 </div>
                 
@@ -555,7 +555,7 @@ export default function PlayPage() {
                     <div className="flex-1 bg-white/20 rounded-full h-3 overflow-hidden">
                       <div 
                         className="h-full bg-gradient-to-r from-blue-400 to-cyan-300 transition-all duration-500 ease-out rounded-full"
-                        style={{ width: `${(paintCount / 20) * 100}%` }}
+                        style={{ width: `${(paintCount / 40) * 100}%` }}
                       />
                     </div>
                     
@@ -588,7 +588,7 @@ export default function PlayPage() {
               <h3 className="text-lg font-bold">Out of Paint!</h3>
             </div>
             <p className="text-white/90 text-sm mb-3">
-              You've used all your paint credits. Wait a moment for them to recharge!
+              You&#39;ve used all your paint credits. Wait a moment for them to recharge!
             </p>
             <div className="flex items-center gap-2 text-white/80">
               <Timer className="w-4 h-4" />
